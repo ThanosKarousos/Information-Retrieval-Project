@@ -18,12 +18,21 @@ query_body = {
 #to size einai epeidi by default epistrefei mono 10 items sto search
 result = es.search(index="movie_index1", body=query_body, size=999)
 
-print("Got %d Hits:" % result['hits']['total']['value'])
-#or: print("Got " + str(result['hits']['total']['value']) + " Hits:")
+numberOfHits = result['hits']['total']['value']
+
+if(numberOfHits == 0):
+  print("There are no movie titles of this kind")
+
+elif(numberOfHits == 1):
+  print("Got %d Hit:" % numberOfHits)
+
+else:
+  print("Got %d Hits:" % numberOfHits)
+  #or: print("Got " + str(numberOfHits) + " Hits:")
 
 
 for hit in result['hits']['hits']:
-    print(hit["_source"])
+    print(hit["_source"]["title"] + " " + hit["_source"]["genres"])
 
 
 ##################################

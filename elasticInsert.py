@@ -18,17 +18,19 @@ request_body = {
 	        "number_of_shards": 1,
 	        "number_of_replicas": 1,
           "similarity": {
-             "bm25-inverse-zero": {
+            "default" : {
                 "type": "BM25",
-                "b": 0
+                "b": 0.5,
+                "k1": 0
              }
+            }
 	    }
 	}
-}
+
 
 print("Creating " + indexName)
 es.indices.create(index = indexName, body = request_body)
 
 with open(csvFilePath) as f:
     reader = csv.DictReader(f)
-    helpers.bulk(es, reader, index= indexName)
+    helpers.bulk(es, reader, index = indexName)
