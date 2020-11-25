@@ -27,7 +27,7 @@ request_body = {
     "mappings": {
         "properties": {
             "movieId": {"type": "integer"},
-            "title":  {"type": "keyword"},
+            "title":  {"type": "text"},
             "genres":  {"type": "text"}
         }
     }
