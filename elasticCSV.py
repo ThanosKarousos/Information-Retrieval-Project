@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 
+# For inserting the ratings.csv file into a new index
+
 from elasticsearch import helpers, Elasticsearch
 import csv
 
 es = Elasticsearch(
     [{'host': 'localhost', 'port': 9200}])
 
-indexName = "movie_index1"
+indexName = "ratings_index1"
 
 # profanws edw vazoume to antistoixo path gia to movies.csv
-csvFilePath = '/home/thanos/Desktop/CEID/semester9/infoRetrieval/project/movies.csv'
+csvFilePath = '/home/thanos/Desktop/CEID/semester9/infoRetrieval/project/ratings.csv'
 
 # vazoume similarity = BM25, opote by default psaxnei me to metric pou 8eloume
 request_body = {
@@ -26,12 +28,12 @@ request_body = {
     },
     "mappings": {
         "properties": {
+            "userId": {"type": "integer"},
             "movieId": {"type": "integer"},
-            "title":  {"type": "keyword"},
-            "genres":  {"type": "text"}
+            "rating":  {"type": "half_float"},
+            "timestamp":  {"type": "integer"}
         }
     }
-
 }
 
 
