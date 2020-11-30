@@ -9,7 +9,7 @@ es = Elasticsearch(
 indexName = "movie_index1"
 
 # profanws edw vazoume to antistoixo path gia to movies.csv
-csvFilePath = '/home/thanos/Desktop/CEID/semester9/infoRetrieval/project/movies.csv'
+csvFilePath = 'movies.csv'
 
 # vazoume similarity = BM25, opote by default psaxnei me to metric pou 8eloume
 request_body = {
@@ -38,6 +38,6 @@ request_body = {
 print("Creating " + indexName)
 es.indices.create(index=indexName, body=request_body)
 
-with open(csvFilePath) as f:
+with open(csvFilePath, encoding="utf-8") as f:
     reader = csv.DictReader(f)
     helpers.bulk(es, reader, index=indexName)
