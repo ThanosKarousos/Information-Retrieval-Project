@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 from elasticsearch import Elasticsearch
+from pandasticsearch import Select
+
 
 es = Elasticsearch(
   [{'host': 'localhost', 'port': 9200}])
@@ -31,10 +33,17 @@ else:
   #or: print("Got " + str(numberOfHits) + " Hits:")
 
 
-for hit in result['hits']['hits']:
-    print(hit["_source"]["title"] + " " + hit["_source"]["genres"])
+#for hit in result['hits']['hits']:
+#    print(hit["_source"]["title"] + " " + hit["_source"]["genres"])
 
+pandas_df = Select.from_dict(result).to_pandas()
 
+titles = pandas_df['title']
+genres = pandas_df['genres']
+movieIds = pandas_df['movieId']
+print(titles)
+print(genres)
+print(movieIds)
 ##################################
 
 #pros to paron emfanizei apotelesma mono otan yparxei 
