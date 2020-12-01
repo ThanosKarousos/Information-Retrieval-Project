@@ -2,6 +2,7 @@
 
 from elasticsearch import Elasticsearch
 from pandasticsearch import Select
+import pandas as pd
 
 
 es = Elasticsearch(
@@ -25,25 +26,23 @@ numberOfHits = result['hits']['total']['value']
 if(numberOfHits == 0):
   print("There are no movie titles of this kind")
 
-elif(numberOfHits == 1):
-  print("Got %d Hit:" % numberOfHits)
-
 else:
-  print("Got %d Hits:" % numberOfHits)
+  print("Got %d Hit(s):" % numberOfHits)
   #or: print("Got " + str(numberOfHits) + " Hits:")
 
+  #creates a dataframe from result JSON
+  pandas_df = Select.from_dict(result).to_pandas()
 
-#for hit in result['hits']['hits']:
-#    print(hit["_source"]["title"] + " " + hit["_source"]["genres"])
 
-pandas_df = Select.from_dict(result).to_pandas()
+  titles = pandas_df['title']
+  genres = pandas_df['genres']
+  movieIds = pandas_df['movieId']
 
-titles = pandas_df['title']
-genres = pandas_df['genres']
-movieIds = pandas_df['movieId']
-print(titles)
-print(genres)
-print(movieIds)
+
+  movieDataframe = pd.concat([movieIds, titles, genres], axis=1, sort=False, join='outer')
+  print(movieDataframe)
+
+
 ##################################
 
 #pros to paron emfanizei apotelesma mono otan yparxei 
