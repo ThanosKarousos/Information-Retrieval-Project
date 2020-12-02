@@ -43,12 +43,8 @@ titles = pandas_df['title']
 genres = pandas_df['genres']
 movieIds = pandas_df['movieId']
 scores = pandas_df['_score']
-avg_rating = [[]]
 
-movieDataframe = pd.concat(
-    [movieIds, titles, genres, scores, avg_rating], axis=1, sort=False, join='outer')
-print(movieDataframe)
-
+ratings_list = []
 for i in range(movieIds.size):
 
     queryBody1 = {
@@ -69,8 +65,16 @@ for i in range(movieIds.size):
 
     ratingAVG = es.search(index="ratings_index1", body=queryBody1, size=999)
 
-    print(ratingAVG["aggregations"]["avg_movie_rating"]["value"])
+    movieRatingAVG = ratingAVG["aggregations"]["avg_movie_rating"]["value"]
+    #r = {"movieID": movieIds[i], "avgRating": movieRatingAVG} ---mporei na xreiastei etsi
+    #ratings_list.append(r)
+    ratings_list.append(movieRatingAVG)
 
+rating_df = pd.DataFrame(ratings_list, columns = ['AvgRating'])
+
+movieDataframe = pd.concat(
+    [movieIds, titles, genres, scores, rating_df], axis=1, sort=False, join='outer')
+print(movieDataframe)
 ##################################
 
 # pros to paron emfanizei apotelesma mono otan yparxei
