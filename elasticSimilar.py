@@ -5,47 +5,75 @@ from pandasticsearch import Select
 import pandas as pd
 
 
+def makeQueryBody(field, value):
+    query_body = {
+        "query": {
+            "match": {
+                field: value
+            }
+        }
+    }
+    return query_body
+
+
 es = Elasticsearch(
-  [{'host': 'localhost', 'port': 9200}])
+    [{'host': 'localhost', 'port': 9200}])
 
 searchTerm = input("What do you want to search for? ")
+#userIDsearch = input("What is your userId? ")
 
-query_body = {
-  "query": {
-      "match": {
-          "title": searchTerm #isws 8elei more_like
-      }
-  }
-}
-
-#to size einai epeidi by default epistrefei mono 10 items sto search
-result = es.search(index="movie_index1", body=query_body, size=999)
+# to size einai epeidi by default epistrefei mono 10 items sto search
+result = es.search(index="movie_index1",
+                   body=makeQueryBody("title", searchTerm), size=999)
 
 numberOfHits = result['hits']['total']['value']
 
 if(numberOfHits == 0):
-  print("There are no movie titles of this kind")
-
-else:
-  print("Got %d Hit(s):" % numberOfHits)
-  #or: print("Got " + str(numberOfHits) + " Hits:")
-
-  #creates a dataframe from result JSON
-  pandas_df = Select.from_dict(result).to_pandas()
+    print("There are no movie titles of this kind")
+    exit()
 
 
-  titles = pandas_df['title']
-  genres = pandas_df['genres']
-  movieIds = pandas_df['movieId']
+print("Got %d Hit(s):" % numberOfHits)
+# or: print("Got " + str(numberOfHits) + " Hits:")
 
+# creates a dataframe from result JSON
+pandas_df = Select.from_dict(result).to_pandas()
 
-  movieDataframe = pd.concat([movieIds, titles, genres], axis=1, sort=False, join='outer')
-  print(movieDataframe)
+titles = pandas_df['title']
+genres = pandas_df['genres']
+movieIds = pandas_df['movieId']
+scores = pandas_df['_score']
+avg_rating = [[]]
 
+movieDataframe = pd.concat(
+    [movieIds, titles, genres, scores, avg_rating], axis=1, sort=False, join='outer')
+print(movieDataframe)
+
+for i in range(movieIds.size):
+
+    queryBody1 = {
+        "query": {
+            "match": {
+                "movieId": movieIds[i]
+            }
+        },
+        "aggs": {
+            "avg_movie_rating": {
+                "avg":
+                {
+                    "field": "rating"
+                }
+            }
+        }
+    }
+
+    ratingAVG = es.search(index="ratings_index1", body=queryBody1, size=999)
+
+    print(ratingAVG["aggregations"]["avg_movie_rating"]["value"])
 
 ##################################
 
-#pros to paron emfanizei apotelesma mono otan yparxei 
-#exact match tou query me ton titlo
-#px: An query="gin", den 8a emfanisei to "Origins" sta apotelesmata
-#paroti to gin emperiexetai sto Origins
+# pros to paron emfanizei apotelesma mono otan yparxei
+# exact match tou query me ton titlo
+# px: An query="gin", den 8a emfanisei to "Origins" sta apotelesmata
+# paroti to gin emperiexetai sto Origins
