@@ -2,6 +2,7 @@
 
 from elasticsearch import helpers, Elasticsearch
 import csv
+from time import sleep
 
 es = Elasticsearch(
     [{'host': 'localhost', 'port': 9200}])
@@ -27,17 +28,32 @@ request_body = {
     "mappings": {
         "properties": {
             "movieId": {"type": "integer"},
-            "title":  {"type": "text"},
-            "genres":  {"type": "text"}
+            "title":  {
+                "type": "text",
+                "analyzer": "english"
+            },
+            "genres":  {"type": "text"},
+            "userId": {"type": "integer"},
+            "rating":  {"type": "half_float"},
+            "timestamp":  {"type": "integer"}
         }
     }
-
 }
 
 
 print("Creating " + indexName)
-es.indices.create(index=indexName, body=request_body)
+#es.indices.create(index=indexName, body=request_body)
 
-with open(csvFilePath, encoding="utf-8") as f:
-    reader = csv.DictReader(f)
-    helpers.bulk(es, reader, index=indexName)
+with open(csvFilePath, encoding="utf-8") as movies:
+    movieReader = csv.DictReader(movies)
+
+    for row in movieReader:
+        row['ratingArr'] = []
+        with open('ratings.csv', encoding="utf-8") as ratings:
+            ratingReader = csv.DictReader(ratings)
+            for rating in ratingReader:
+                if rating['movieId'] == row['movieId']:
+                    gen = {"rating": rating['rating'], "userId": rating['userId']}
+                    row['ratingArr'].append(gen)
+        print(row)
+    #helpers.bulk(es, reader, index=indexName)
