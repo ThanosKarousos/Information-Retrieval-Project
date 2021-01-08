@@ -2,7 +2,7 @@
 
 from elasticsearch import helpers, Elasticsearch
 import csv
-from time import sleep
+import operator
 
 es = Elasticsearch(
     [{'host': 'localhost', 'port': 9200}])
@@ -32,28 +32,29 @@ request_body = {
                 "type": "text",
                 "analyzer": "english"
             },
-            "genres":  {"type": "text"},
-            "userId": {"type": "integer"},
-            "rating":  {"type": "half_float"},
-            "timestamp":  {"type": "integer"}
+            "genres":  {"type": "text"}
+             #No array handler
         }
     }
 }
 
-
 print("Creating " + indexName)
-#es.indices.create(index=indexName, body=request_body)
+es.indices.create(index=indexName, body=request_body)
 
-with open(csvFilePath, encoding="utf-8") as movies:
+with open(csvFilePath, encoding="utf-8") as movies, open('ratings.csv', encoding="utf-8") as ratings:
     movieReader = csv.DictReader(movies)
-
+    ratingReader = csv.DictReader(ratings)
+    sortedRating = sorted(ratingReader, key=lambda row: int(row['movieId'])) #sorting ratings by movieId for faster insert
+    z = 0
+    rows = []
     for row in movieReader:
         row['ratingArr'] = []
-        with open('ratings.csv', encoding="utf-8") as ratings:
-            ratingReader = csv.DictReader(ratings)
-            for rating in ratingReader:
-                if rating['movieId'] == row['movieId']:
-                    gen = {"rating": rating['rating'], "userId": rating['userId']}
-                    row['ratingArr'].append(gen)
-        print(row)
-    #helpers.bulk(es, reader, index=indexName)
+        for i in range(z, len(sortedRating)):
+            if sortedRating[i]['movieId'] == row['movieId']:
+                gen = {"rating": sortedRating[i]['rating'], "userId": sortedRating[i]['userId']}
+                row['ratingArr'].append(gen)
+            else:
+                z=i #so for loop can continue from where it stopped (break)
+                break
+        rows.append(row)
+    helpers.bulk(es, rows, index=indexName)
