@@ -2,7 +2,6 @@
 
 from elasticsearch import helpers, Elasticsearch
 import csv
-import operator
 
 es = Elasticsearch(
     [{'host': 'localhost', 'port': 9200}])
@@ -32,8 +31,15 @@ request_body = {
                 "type": "text",
                 "analyzer": "english"
             },
-            "genres":  {"type": "text"}
-             #No array handler
+            "genres":  {"type": "text"},
+            "ratingArr": {
+                "type": "nested",
+                "properties": {
+                    "movieId":{"type": "integer"},
+                    "rating": {"type": "float"},
+                    "userId": {"type": "integer"}
+                }
+            }
         }
     }
 }
@@ -51,10 +57,10 @@ with open(csvFilePath, encoding="utf-8") as movies, open('ratings.csv', encoding
         row['ratingArr'] = []
         for i in range(z, len(sortedRating)):
             if sortedRating[i]['movieId'] == row['movieId']:
-                gen = {"rating": sortedRating[i]['rating'], "userId": sortedRating[i]['userId']}
+                gen = {"movieId": sortedRating[i]['movieId'], "rating": sortedRating[i]['rating'], "userId": sortedRating[i]['userId']}
                 row['ratingArr'].append(gen)
             else:
-                z=i #so for loop can continue from where it stopped (break)
+                z = i #so for loop can continue from where it stopped (break)
                 break
         rows.append(row)
     helpers.bulk(es, rows, index=indexName)
