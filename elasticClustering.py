@@ -19,16 +19,34 @@ prev_pandas_df = Select.from_dict(result).to_pandas()
 
 pandas_df = prev_pandas_df.drop(columns=['_index', '_type', '_id', '_score'])
 
-new_df = pd.DataFrame({'userIds': []})
+#new_df = pd.DataFrame({'userIds': []})
+new_df = pd.DataFrame()
+averageByGenres = pd.DataFrame()
+genresDict = {}
 for index, row in pandas_df.iterrows():
-    if row['genres'] not in new_df.columns:
-        tempDf = pd.DataFrame()#to be continued (add column?)
-    for ratingRow in row['ratingArr']:
-        ratingRow['userId'] = int(ratingRow['userId'])
-        if ratingRow['userId'] not in new_df['userIds'].values:
-            new_df = new_df.append({'userIds': ratingRow['userId']}, ignore_index=True)
+    temp_df = pd.DataFrame(row['ratingArr'])
+    new_df = new_df.append(temp_df, ignore_index=True)
+    genres = row['genres']
+    genres = genres.split('|')
+    for genre in genres:
+        if genre not in genresDict:
+            genresDict[genre] = [row['movieId']]
+        else:
+            genresDict[genre].append(row['movieId'])
 
-print(new_df)
+new_df['userId'] = new_df['userId'].astype(int)
+new_df['movieId'] = new_df['movieId'].astype(int)
+new_df['rating'] = new_df['rating'].astype(float)
+#new_df = new_df.pivot(index='userId', columns='movieId', values='rating')
 
+for key in genresDict:
+    temp_df = new_df[genresDict[key]]
+    averageByGenres[key] = temp_df.mean(axis=1)
+
+print(averageByGenres)
+
+
+
+#####################################################################
 #df_ = pd.DataFrame(index='index', columns='columns')
 #df_ = df_.fillna([]) # with 0s rather than NaNs
