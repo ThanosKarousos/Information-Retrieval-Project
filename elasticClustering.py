@@ -4,6 +4,7 @@ from elasticsearch import Elasticsearch
 from pandas.core.frame import DataFrame
 from pandasticsearch import Select
 import pandas as pd
+from sklearn.cluster import KMeans
 
 query_body = {
         "query": {
@@ -21,29 +22,38 @@ pandas_df = prev_pandas_df.drop(columns=['_index', '_type', '_id', '_score'])
 
 #new_df = pd.DataFrame({'userIds': []})
 new_df = pd.DataFrame()
-averageByGenres = pd.DataFrame()
+averageByGenre = pd.DataFrame()
 genresDict = {}
 for index, row in pandas_df.iterrows():
     temp_df = pd.DataFrame(row['ratingArr'])
     new_df = new_df.append(temp_df, ignore_index=True)
     genres = row['genres']
     genres = genres.split('|')
-    for genre in genres:
-        if genre not in genresDict:
-            genresDict[genre] = [row['movieId']]
-        else:
-            genresDict[genre].append(row['movieId'])
+    if not temp_df.empty:
+        for genre in genres:
+            if genre not in genresDict:
+                genresDict[genre] = [int(row['movieId'])]
+            else:
+                genresDict[genre].append(int(row['movieId']))
 
 new_df['userId'] = new_df['userId'].astype(int)
 new_df['movieId'] = new_df['movieId'].astype(int)
 new_df['rating'] = new_df['rating'].astype(float)
-#new_df = new_df.pivot(index='userId', columns='movieId', values='rating')
+new_df = new_df.pivot(index='userId', columns='movieId', values='rating')
 
 for key in genresDict:
     temp_df = new_df[genresDict[key]]
-    averageByGenres[key] = temp_df.mean(axis=1)
+    averageByGenre[key] = temp_df.mean(axis=1)
 
-print(averageByGenres)
+averageByGenre = averageByGenre.fillna(0)
+
+clusteringRes = KMeans(n_clusters = 6, algorithm='full', random_state=2).fit_predict(averageByGenre)
+
+new_df['clustering'] = pd.Series(clusteringRes, index=new_df.index)
+
+print(new_df)
+
+
 
 
 
